@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>对话导出</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --surface: light-dark(#f6f7fa, #202126);
+      --border: light-dark(#dfe2eb, #3b3d47);
+      --ink: light-dark(#1e2738, #e5e9f4);
+      --muted: light-dark(#4f5c71, #b4bdce);
+      --accent: light-dark(#234fb6, #a9c3ff);
+      --button: light-dark(#2455c3, #b4caff);
+      --button-ink: light-dark(#fff, #102851);
+      --error: light-dark(#a11a2d, #ffb0b5);
+    }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: Canvas;
+      font: 14px/1.55 system-ui, "Microsoft YaHei UI", sans-serif;
+    }
+    main { padding: 18px; max-width: 36rem; }
+    section { padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+    h1 { font-size: 16px; margin: 0; }
+    p { margin: 6px 0 14px; color: var(--muted); }
+    button {
+      padding: 9px 14px;
+      border: 0;
+      border-radius: 7px;
+      background: var(--button);
+      color: var(--button-ink);
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .6; cursor: default; }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .secondary { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+    #result { margin: 12px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+    #result[data-state="error"] { color: var(--error); }
+  </style>
+</head>
+<body>
+  <main>
+    <section aria-labelledby="heading">
+      <h1 id="heading">当前对话</h1>
+      <p>将用户消息和助手回复导出为 Markdown。</p>
+      <div class="actions">
+        <button id="export" type="button">另存为…</button>
+        <button id="desktop" class="secondary" type="button">保存到桌面</button>
+      </div>
+      <p id="result" role="status" aria-live="polite" hidden></p>
+    </section>
+  </main>
+  <script>
+    const button = document.getElementById('export');
+    const desktop = document.getElementById('desktop');
+    const result = document.getElementById('result');
+
+    function show(message, state) {
+      result.textContent = message;
+      result.dataset.state = state;
+      result.hidden = false;
+    }
+
+    async function exportConversation(destination) {
+      button.disabled = desktop.disabled = true;
+      show(destination === 'choose' ? '请在「另存为」窗口选择保存位置。' : '正在导出…', 'pending');
+      try {
+        const params = new URLSearchParams(location.search);
+        const bridge = window.sidecar;
+        const conversationId = bridge?.conversationId || params.get('conversationId') || '';
+        const token = params.get('token') || bridge?.token;
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['X-Sidecar-Token'] = token;
+        const request = bridge?.fetch ? bridge.fetch.bind(bridge) : window.fetch.bind(window);
+        const response = await request('/api/export', {
+          method: 'POST',
+          redirect: 'error',
+          headers,
+          body: JSON.stringify({ conversationId, destination }),
+        });
+        if (!response.ok) throw new Error('面板连接失败，请关闭后重新打开。');
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+        if (data.cancelled) {
+          show('已取消保存。', 'cancelled');
+          return;
+        }
+        const warning = data.unreadable ? `（${data.unreadable} 段无法读取）` : '';
+        show(`已保存 ${data.count} 条消息${warning}。\n${data.path}`, 'saved');
+      } catch (error) {
+        show(error instanceof Error ? error.message : '导出失败，请重试。', 'error');
+      } finally {
+        button.disabled = desktop.disabled = false;
+      }
+    }
+    button.addEventListener('click', () => exportConversation('choose'));
+    desktop.addEventListener('click', () => exportConversation('desktop'));
+  </script>
+</body>
+</html>

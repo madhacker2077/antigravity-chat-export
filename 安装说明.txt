@@ -1,0 +1,13 @@
+Antigravity 桌面端 · 对话导出 1.1.0
+
+1. 解压 ZIP，在 antigravity-chat-export 文件夹里双击 install.cmd。
+2. 进入 Antigravity 的「自定义 → 已安装」，启用「对话导出」。从旧版升级时，关闭插件再启用，然后重新打开面板。如果列表还没更新，重新打开 Antigravity。
+3. 打开要导出的本地会话，点击右上角「… → 扩展 → 对话导出」。
+4. 点击「另存为…」，在 Windows 保存窗口选择文件夹并修改文件名。点击「保存到桌面」会将文件直接保存到桌面的 Antigravity_Exports 文件夹。
+
+当前版本导出当前本地会话的用户消息和助手文本回复。输出为 UTF-8 Markdown，保留原消息的代码块。
+
+install.cmd 支持从 1.0.0 升级。升级前，旧文件会备份到用户目录下的 .gemini\config\plugin-backups。
+
+桌面插件安装文档
+https://antigravity.google/docs/plugins/#manual-plugin-installation

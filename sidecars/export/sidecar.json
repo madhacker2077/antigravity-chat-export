@@ -1,0 +1,19 @@
+{
+  "command": "node",
+  "args": ["server.mjs"],
+  "restart_policy": "on-failure",
+  "display_name": "对话导出",
+  "description": "将当前会话保存为 Markdown",
+  "has_web_ui": true,
+  "agent_permissions": { "allows_user_interactions": false },
+  "ui_config": {
+    "display_name": "对话导出",
+    "views": [
+      {
+        "entrypoint": "SIDECAR_UI_ENTRYPOINT_AUX_PANE",
+        "path": "/",
+        "title": "对话导出"
+      }
+    ]
+  }
+}

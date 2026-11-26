@@ -1,0 +1,10 @@
+*.zip
+*.tmp
+*.log
+*.db
+*.db-wal
+*.db-shm
+*.jsonl
+.env
+.env.*
+Antigravity_Exports/
